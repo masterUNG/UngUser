@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'dart:math';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:unguser/utility/normal_dialog.dart';
 
 class Register extends StatefulWidget {
   @override
@@ -13,15 +16,17 @@ class _RegisterState extends State<Register> {
   File file;
   String name, user, password;
   final formKey = GlobalKey<FormState>();
+  String nameImage;
 
   // Method
   Widget nameForm() {
     Color color = Colors.purple;
     return Container(
       width: 250.0,
-      child: TextFormField(onSaved: (String string){
-        name = string.trim();
-      },
+      child: TextFormField(
+        onSaved: (String string) {
+          name = string.trim();
+        },
         decoration: InputDecoration(
           icon: Icon(
             Icons.face,
@@ -42,9 +47,10 @@ class _RegisterState extends State<Register> {
     Color color = Colors.green;
     return Container(
       width: 250.0,
-      child: TextFormField(onSaved: (String string){
-        user = string.trim();
-      },
+      child: TextFormField(
+        onSaved: (String string) {
+          user = string.trim();
+        },
         decoration: InputDecoration(
           icon: Icon(
             Icons.account_circle,
@@ -65,9 +71,10 @@ class _RegisterState extends State<Register> {
     Color color = Colors.blue;
     return Container(
       width: 250.0,
-      child: TextFormField(onSaved: (String string){
-        password = string.trim();
-      },
+      child: TextFormField(
+        onSaved: (String string) {
+          password = string.trim();
+        },
         decoration: InputDecoration(
           icon: Icon(
             Icons.lock,
@@ -159,8 +166,44 @@ class _RegisterState extends State<Register> {
       icon: Icon(Icons.cloud_upload),
       onPressed: () {
         formKey.currentState.save();
+
+        if (file == null) {
+          normalDialog(
+              context, 'Non Choose Avatar', 'Please Choose Camera or Gallery');
+        } else if (name.isEmpty || user.isEmpty || password.isEmpty) {
+          normalDialog(context, 'Have Space', 'Please Fill All Every Blank');
+        } else {
+          uploadImageToServer();
+        }
       },
     );
+  }
+
+  Future<void> uploadImageToServer() async {
+    Random random = Random();
+    int number = random.nextInt(10000);
+    nameImage = 'avatar$number.jpg';
+    print('nameImage = $nameImage');
+    String url = 'https://www.androidthai.in.th/bow/saveFileUng.php';
+    try {
+      Map<String, dynamic> map = Map();
+      map['file'] = UploadFileInfo(file, nameImage);
+      FormData formData = FormData.from(map);
+      Response response = await Dio().post(url, data: formData);
+      print('response = $response');
+      uploadMySQL();
+    } catch (e) {}
+  }
+
+  Future<void> uploadMySQL() async {
+
+    String avatar = 'https://www.androidthai.in.th/bow/Upload/$nameImage';
+
+    String url = 'https://www.androidthai.in.th/bow/addUserMaster.php?isAdd=true&Name=$name&User=$user&Password=$password&Avatar=$avatar';
+
+    Response response = await Dio().get(url);
+    print('response = $response');
+
   }
 
   @override
@@ -170,7 +213,8 @@ class _RegisterState extends State<Register> {
         actions: <Widget>[registerButton()],
         title: Text('Register'),
       ),
-      body: Form(key: formKey,
+      body: Form(
+        key: formKey,
         child: ListView(
           padding: EdgeInsets.all(30.0),
           children: <Widget>[
