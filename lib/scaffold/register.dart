@@ -65,7 +65,9 @@ class _RegisterState extends State<Register> {
     Color color = Colors.blue;
     return Container(
       width: 250.0,
-      child: TextFormField(
+      child: TextFormField(onSaved: (String string){
+        password = string.trim();
+      },
         decoration: InputDecoration(
           icon: Icon(
             Icons.lock,
@@ -155,7 +157,9 @@ class _RegisterState extends State<Register> {
   Widget registerButton() {
     return IconButton(
       icon: Icon(Icons.cloud_upload),
-      onPressed: () {},
+      onPressed: () {
+        formKey.currentState.save();
+      },
     );
   }
 
