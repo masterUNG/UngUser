@@ -204,6 +204,8 @@ class _RegisterState extends State<Register> {
     Response response = await Dio().get(url);
     print('response = $response');
 
+    Navigator.of(context).pop();
+
   }
 
   @override
